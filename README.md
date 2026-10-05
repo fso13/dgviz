@@ -51,10 +51,15 @@ Static site lives in [`docs/`](docs/): product overview, user/admin guides, mock
 
 Deployed automatically by [`.github/workflows/pages.yml`](.github/workflows/pages.yml) on pushes to `docs/**`.
 
-One-time setup (required before the first deploy — `GITHUB_TOKEN` cannot create the Pages site):
+Deploy publishes `docs/` to the **`gh-pages`** branch.
 
-1. **Settings → Pages → Build and deployment → Source** → *GitHub Actions* → Save.
-2. Re-run workflow **Deploy GitHub Pages**.
+One-time setup after the first successful workflow run:
+
+1. **Settings → Pages → Build and deployment**
+2. **Source:** *Deploy from a branch*
+3. **Branch:** `gh-pages` / `(root)` → Save
+
+Site URL: `https://<owner>.github.io/dgviz/`
 
 For **private** repos, GitHub Pages needs a paid plan (Pro/Team/Enterprise) or make the repo public.
 
