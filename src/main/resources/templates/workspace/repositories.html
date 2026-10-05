@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/shell :: page('Репозитории · DGViz', 'ws-repositories', ~{::main})}"
+      xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:fragment="main">
+  <div th:if="${success}" class="flash ok" th:text="${success}"></div>
+  <div th:if="${error}" class="flash err" th:text="${error}"></div>
+  <h1>Репозитории</h1>
+  <p class="muted">
+    Сканирование выполняется Gradle-плагином (<code>./gradlew dgvizScan</code>):
+    в сервис уходят дерево зависимостей и SBOM, обратно — отчёт для MR.
+  </p>
+  <div class="card table-wrap">
+    <table>
+      <thead>
+      <tr>
+        <th>ID</th>
+        <th>Repository</th>
+        <th>Project</th>
+        <th>Type</th>
+        <th>Build</th>
+        <th>Last scan</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="r : ${repositories}">
+        <td class="mono" th:text="${r.id}">1</td>
+        <td>
+          <a class="repo-link" th:href="@{|/workspace/repositories/${r.id}|}" th:text="${r.name}">repo</a>
+        </td>
+        <td>
+          <a class="repo-link" th:href="@{|/workspace/projects/${r.project.id}|}" th:text="${r.project.name}">project</a>
+        </td>
+        <td><span class="badge" th:text="${r.sourceType}">PLUGIN</span></td>
+        <td th:text="${r.buildSystem} ?: 'gradle'">gradle</td>
+        <td>
+          <th:block th:with="run=${latestRuns.get(r.id)}">
+            <span th:if="${run != null}">
+              <span th:text="${run.analyzedAt}">-</span>
+              · nodes <span th:text="${run.nodeCount}">0</span>
+              · vulns <span th:text="${run.vulnerabilityCount}">0</span>
+              · <a th:href="@{|/workspace/repositories/${r.id}?tab=tree|}">tree</a>
+              · <a th:href="@{|/workspace/repositories/${r.id}?tab=issues|}">issues</a>
+            </span>
+            <span th:if="${run == null}" class="muted">ожидает dgvizScan</span>
+          </th:block>
+        </td>
+      </tr>
+      <tr th:if="${#lists.isEmpty(repositories)}"><td colspan="6" class="muted">Нет доступных репозиториев</td></tr>
+      </tbody>
+    </table>
+  </div>
+</th:block>
+</body>
+</html>

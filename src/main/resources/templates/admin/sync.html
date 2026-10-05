@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/shell :: page('CVE Sync · DGViz', 'admin-sync', ~{::main})}"
+      xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:fragment="main">
+  <div th:if="${success}" class="flash ok" th:text="${success}"></div>
+  <div th:if="${error}" class="flash err" th:text="${error}"></div>
+  <h1>CVE / vulnerability sync</h1>
+  <p class="muted">
+    Sources: NVD (CVE.org catalogue feed), OSV, GitHub Advisories, optional Snyk (token via <code>SNYK_TOKEN</code>).
+    Cron is editable per source and reloads immediately.
+  </p>
+  <div class="grid">
+    <div class="card"><h3>Total</h3><div class="value" th:text="${vulnCount}">0</div></div>
+    <div class="card"><h3>NVD</h3><div class="value" th:text="${nvdCount}">0</div></div>
+    <div class="card"><h3>OSV</h3><div class="value" th:text="${osvCount}">0</div></div>
+    <div class="card"><h3>GHSA</h3><div class="value" th:text="${ghsaCount}">0</div></div>
+    <div class="card"><h3>Snyk</h3><div class="value" th:text="${snykCount}">0</div></div>
+  </div>
+
+  <div class="card" th:each="s : ${sources}">
+    <h2 th:text="${s.displayName}">NVD</h2>
+    <form th:action="@{|/admin/sync/${s.id}|}" method="post" class="stack">
+      <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+      <div class="form-row">
+        <label class="checkbox"><input type="checkbox" name="enabled" value="true" th:checked="${s.enabled}"/> enabled</label>
+        <input name="cronExpression" th:value="${s.cronExpression}" class="mono" style="min-width:180px" required/>
+        <input name="apiBaseUrl" th:value="${s.apiBaseUrl}" style="min-width:320px"/>
+        <button class="btn btn-sm" type="submit">Save schedule</button>
+      </div>
+    </form>
+    <form th:action="@{|/admin/sync/${s.id}/run|}" method="post" style="margin-top:0.5rem">
+      <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+      <button class="btn btn-secondary btn-sm" type="submit">Run now (async)</button>
+    </form>
+    <p class="muted">
+      Last: <span th:class="'status-' + ${s.lastStatus}" th:text="${s.lastStatus} ?: '-'"></span>
+      · <span th:text="${s.lastSyncedAt} ?: '-'"></span>
+      · <span th:text="${s.lastMessage} ?: ''"></span>
+    </p>
+  </div>
+
+  <h2>Recent runs</h2>
+  <div class="card table-wrap">
+    <table>
+      <thead><tr><th>Source</th><th>Status</th><th>Records</th><th>Started</th><th>Finished</th><th>Message</th></tr></thead>
+      <tbody>
+      <tr th:each="r : ${runs}">
+        <td th:text="${r.sourceCode}">NVD</td>
+        <td th:class="'status-' + ${r.status}" th:text="${r.status}">SUCCESS</td>
+        <td th:text="${r.recordsUpserted}">0</td>
+        <td th:text="${r.startedAt}">-</td>
+        <td th:text="${r.finishedAt} ?: '-'">-</td>
+        <td th:text="${r.message}">-</td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+</th:block>
+</body>
+</html>

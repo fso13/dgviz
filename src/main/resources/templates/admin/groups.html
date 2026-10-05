@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/shell :: page('Группы · DGViz', 'admin-groups', ~{::main})}"
+      xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:fragment="main">
+  <div th:if="${success}" class="flash ok" th:text="${success}"></div>
+  <div th:if="${error}" class="flash err" th:text="${error}"></div>
+  <h1>Groups</h1>
+  <p class="muted">
+    Пользователи видят только проекты, привязанные к группам, в которых они состоят.
+    Менеджер группы может менять состав только своих групп. Создавать/удалять группы может ADMIN.
+  </p>
+
+  <div class="card" th:if="${canCreate}">
+    <h2>Create group</h2>
+    <form th:action="@{/admin/groups}" method="post" class="stack">
+      <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+      <div class="form-grid-2">
+        <label class="field">Name
+          <input type="text" name="name" placeholder="group name" required/>
+        </label>
+        <label class="field">Description
+          <input type="text" name="description" placeholder="description"/>
+        </label>
+      </div>
+      <label class="field">Members
+        <select name="memberIds" multiple size="6">
+          <option th:each="u : ${users}" th:value="${u.id}"
+                  th:text="|${u.username} (${u.displayName})|"></option>
+        </select>
+      </label>
+      <button class="btn btn-sm" type="submit">Create</button>
+    </form>
+  </div>
+
+  <div class="card" th:each="g : ${groups}">
+    <h2 th:text="${g.name}">team</h2>
+    <p class="muted" th:text="${g.description} ?: '—'">desc</p>
+    <form th:action="@{|/admin/groups/${g.id}|}" method="post" class="stack">
+      <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+      <div class="form-grid-2">
+        <label class="field">Name
+          <input type="text" name="name" th:value="${g.name}" required/>
+        </label>
+        <label class="field">Description
+          <input type="text" name="description" th:value="${g.description}"/>
+        </label>
+      </div>
+      <label class="field">Members
+        <select name="memberIds" multiple size="6">
+          <option th:each="u : ${users}" th:value="${u.id}"
+                  th:text="|${u.username} (${u.displayName})|"
+                  th:selected="${#sets.contains(g.memberIds(), u.id)}"></option>
+        </select>
+      </label>
+      <div class="toolbar">
+        <button class="btn btn-sm" type="submit">Save</button>
+      </div>
+    </form>
+    <form th:action="@{|/admin/groups/${g.id}/delete|}" method="post" style="margin-top:0.75rem" th:if="${adminView}">
+      <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+      <button class="danger" type="submit">Delete</button>
+    </form>
+  </div>
+</th:block>
+</body>
+</html>

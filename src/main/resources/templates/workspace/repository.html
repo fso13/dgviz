@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/shell :: page(${repo.name} + ' · DGViz', 'ws-repositories', ~{::main})}"
+      xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:fragment="main">
+  <nav class="breadcrumb">
+    <a th:href="@{/workspace/repositories}">Репозитории</a>
+    <span class="breadcrumb__sep">/</span>
+    <span th:text="${repo.name}">repo</span>
+  </nav>
+
+  <div th:if="${success}" class="flash ok" th:text="${success}"></div>
+  <div th:if="${info}" class="flash ok" th:text="${info}"></div>
+  <div th:if="${error}" class="flash err" th:text="${error}"></div>
+
+  <div class="section-card-head">
+    <div>
+      <p class="eyebrow" th:text="|id=${repo.id} · ${repo.sourceType}|">id</p>
+      <h1 th:text="${repo.name}">repo</h1>
+      <p class="muted">
+        Проект <span th:text="${repo.project.name}">project</span>
+        · сборка <span th:text="${repo.buildSystem} ?: 'gradle'">gradle</span>
+        · ветка <span th:text="${repo.defaultBranch}">main</span>
+      </p>
+    </div>
+    <div class="toolbar">
+      <form th:if="${canRescanFromStored}" th:action="@{|/workspace/repositories/${repo.id}/rescan|}" method="post">
+        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        <button class="btn btn-sm" type="submit" title="Повторный анализ сохранённого SBOM/дерева по текущей CVE DB">
+          Пересканировать
+        </button>
+      </form>
+      <form th:if="${canTriggerGitLabPipeline}" th:action="@{|/workspace/repositories/${repo.id}/refresh-ci|}" method="post">
+        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        <button class="btn btn-ghost btn-sm" type="submit" title="Запустить GitLab pipeline с dgvizScan — обновит дерево зависимостей">
+          Обновить дерево (CI)
+        </button>
+      </form>
+      <a class="btn btn-ghost btn-sm"
+         th:if="${latestRun != null}"
+         th:href="@{|/workspace/repositories/${repo.id}/sbom.json|}">Скачать SBOM</a>
+      <span class="muted" th:if="${latestRun == null}">Сначала ./gradlew dgvizScan</span>
+    </div>
+  </div>
+
+  <nav class="settings-tabs" aria-label="Разделы репозитория">
+    <a class="settings-tabs__tab"
+       th:classappend="${tab == 'overview'} ? ' is-active'"
+       th:href="@{|/workspace/repositories/${repo.id}?tab=overview|}">Обзор</a>
+    <a class="settings-tabs__tab"
+       th:classappend="${tab == 'tree'} ? ' is-active'"
+       th:href="@{|/workspace/repositories/${repo.id}?tab=tree|}">Дерево зависимостей</a>
+    <a class="settings-tabs__tab"
+       th:classappend="${tab == 'issues'} ? ' is-active'"
+       th:href="@{|/workspace/repositories/${repo.id}?tab=issues|}">Уязвимости / issues</a>
+    <a class="settings-tabs__tab"
+       th:classappend="${tab == 'history'} ? ' is-active'"
+       th:href="@{|/workspace/repositories/${repo.id}?tab=history|}">История сканов</a>
+  </nav>
+
+  <!-- Overview -->
+  <th:block th:if="${tab == 'overview'}">
+    <div class="card">
+      <h2>Настройки</h2>
+      <dl class="kv-list">
+        <div><dt>Тип</dt><dd><span class="badge" th:text="${repo.sourceType}">PLUGIN</span></dd></div>
+        <div><dt>Build</dt><dd th:text="${repo.buildSystem} ?: 'gradle'">gradle</dd></div>
+        <div><dt>VCS URL</dt><dd class="mono" th:text="${repo.vcsUrl} ?: '—'">—</dd></div>
+        <div><dt>Path</dt><dd class="mono" th:text="${repo.gitlabPath} ?: '—'">—</dd></div>
+        <div><dt>Remote host</dt><dd class="mono" th:text="${repo.remoteHost} ?: '—'">—</dd></div>
+        <div><dt>Create issues</dt><dd th:text="${repo.createIssuesDefault} ? 'да (по умолчанию)' : 'нет'">нет</dd></div>
+        <div><dt>Access token</dt><dd th:text="${repo.hasAccessToken()} ? 'задан' : 'не задан'">не задан</dd></div>
+        <div><dt>Scan token</dt><dd class="mono" th:text="${repo.scanToken} ?: '—'">—</dd></div>
+      </dl>
+    </div>
+
+    <div class="card">
+      <h2>Подключение плагина</h2>
+      <pre class="contract-example" th:text="|plugins {
+  id(&quot;io.github.dgviz.scan&quot;) version &quot;0.3.0&quot;
+}
+dgviz {
+  host = &quot;http://localhost:8080&quot;
+  repositoryId = ${repo.id}
+  token = &quot;${repo.scanToken}&quot;
+  createIssues = ${repo.createIssuesDefault}
+}|">plugin</pre>
+      <p class="muted">Первый раз / при смене зависимостей: <code>./gradlew dgvizScan</code></p>
+      <p class="muted">
+        <strong>Пересканировать</strong> в UI повторно анализирует уже сохранённый SBOM/дерево по актуальной CVE DB — плагин не нужен.
+        Плагин (или «Обновить дерево (CI)») нужен только чтобы обновить сам состав зависимостей.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>Параметры Gradle-плагина <code>dgviz { }</code></h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Параметр</th><th>Обяз.</th><th>По умолчанию</th><th>Описание</th></tr></thead>
+          <tbody>
+          <tr><td class="mono">host</td><td>да</td><td><code>http://localhost:8080</code></td><td>Базовый URL DGViz (без завершающего <code>/</code>).</td></tr>
+          <tr><td class="mono">repositoryId</td><td>да</td><td>—</td><td>ID репозитория из Admin → Репозитории.</td></tr>
+          <tr><td class="mono">token</td><td>да</td><td>—</td><td>Scan token репозитория; заголовок <code>X-DGViz-Token</code>.</td></tr>
+          <tr><td class="mono">createIssues</td><td>нет</td><td><code>false</code></td><td>Создавать issues в GitLab/GitHub для critical/high CVE (нужен access token в DGViz).</td></tr>
+          <tr><td class="mono">failOnIssues</td><td>нет</td><td><code>true</code></td><td>Падать задачей <code>dgvizScan</code>, если отчёт со статусом <code>FAILED</code>.</td></tr>
+          <tr><td class="mono">configurationName</td><td>нет</td><td><code>runtimeClasspath</code></td><td>Gradle configuration для дерева (нужен Java/Java Library plugin).</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="muted">
+        Задача: <code>dgvizScan</code> (group <code>verification</code>).
+        Отчёты: <code>build/reports/dgviz/report.md</code>, <code>report.json</code>.
+        Env: <code>DGVIZ_HOST</code>, <code>DGVIZ_REPO_ID</code>, <code>DGVIZ_TOKEN</code>, <code>DGVIZ_CREATE_ISSUES</code>.
+        Подробнее: <code>dgviz-gradle-plugin/README.md</code>.
+      </p>
+    </div>
+
+    <div class="card" th:if="${latestRun != null}">
+      <h2>Последний скан</h2>
+      <p class="muted">
+        <span th:text="${latestRun.analyzedAt}">-</span>
+        · status <span th:text="${latestRun.status}">SUCCESS</span>
+        · nodes <span th:text="${latestRun.nodeCount}">0</span>
+        · vulns <span th:text="${latestRun.vulnerabilityCount}">0</span>
+        · conflicts <span th:text="${latestRun.conflictCount}">0</span>
+      </p>
+      <p th:if="${latestRun.message != null}" th:text="${latestRun.message}">msg</p>
+      <div class="toolbar">
+        <a class="btn btn-sm" th:href="@{|/workspace/repositories/${repo.id}?tab=tree|}">Дерево</a>
+        <a class="btn btn-ghost btn-sm" th:href="@{|/workspace/repositories/${repo.id}?tab=issues|}">Issues</a>
+        <a class="btn btn-ghost btn-sm" th:href="@{|/workspace/analysis/${latestRun.id}/sbom.json|}">SBOM</a>
+        <a class="btn btn-ghost btn-sm" th:href="@{|/workspace/repositories/${repo.id}/export/tree?format=txt|}">Tree TXT</a>
+        <a class="btn btn-ghost btn-sm"
+           th:href="@{/workspace/repositories/{id}/export/vulnerabilities(id=${repo.id},format=csv)}">Vulns CSV</a>
+        <a class="btn btn-ghost btn-sm"
+           th:href="@{/workspace/repositories/{id}/export/vulnerabilities(id=${repo.id},format=xlsx)}">Vulns XLSX</a>
+        <a class="btn btn-ghost btn-sm"
+           th:href="@{/workspace/repositories/{id}/export/vulnerabilities(id=${repo.id},format=pdf)}">Vulns PDF</a>
+        <form th:action="@{|/workspace/repositories/${repo.id}/export/email|}" method="post" style="display:inline">
+          <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+          <button class="btn btn-sm" type="submit"
+                  title="Отправить PDF/CSV/дерево на email всем участникам группы проекта с доступом к репозиторию">
+            Отправить отчёт на почту
+          </button>
+        </form>
+      </div>
+    </div>
+    <div class="card" th:if="${latestRun == null}">
+      <p class="muted">Сканов ещё нет — запустите <code>./gradlew dgvizScan</code> в проекте.</p>
+    </div>
+
+    <div class="card table-wrap" th:if="${latestRun != null and !#lists.isEmpty(vulnerabilities)}">
+      <h2>Уязвимости (последний скан)</h2>
+      <table>
+        <thead>
+        <tr>
+          <th>Severity</th>
+          <th>Библиотека</th>
+          <th>Версия</th>
+          <th>Исправлено в</th>
+          <th>CVE</th>
+          <th>CVSS</th>
+          <th>Title</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="i : ${vulnerabilities}">
+          <td><span class="sev" th:classappend="' sev--' + ${#strings.toLowerCase(i.severity)}" th:text="${i.severity}">HIGH</span></td>
+          <td class="mono" th:text="${i.packageName()}">g:a</td>
+          <td class="mono" th:text="${i.packageVersion()}">1.0</td>
+          <td class="mono" th:text="${i.fixedVersionDisplay()}">—</td>
+          <td class="mono">
+            <a th:if="${i.advisoryUrl() != null}" th:href="${i.advisoryUrl()}" target="_blank" rel="noopener" th:text="${i.cve}">CVE</a>
+            <span th:if="${i.advisoryUrl() == null}">—</span>
+          </td>
+          <td th:text="${i.cvss} ?: '-'">-</td>
+          <td th:text="${i.title}">title</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </th:block>
+
+  <!-- Dependency tree -->
+  <th:block th:if="${tab == 'tree'}">
+    <div class="card" th:if="${latestRun == null}">
+      <p class="muted">Нет данных — сначала выполните scan.</p>
+    </div>
+    <div class="card dep-tree-card" th:if="${latestRun != null}">
+      <div class="section-card-head">
+        <div>
+          <h2>Дерево зависимостей</h2>
+          <p class="muted" th:text="|Скан ${latestRun.analyzedAt} · ${latestRun.nodeCount} nodes|">scan</p>
+        </div>
+        <div class="toolbar" th:if="${!#lists.isEmpty(treeRoots)}">
+          <button type="button" class="btn btn-ghost btn-sm" data-tree-action="expand">Развернуть всё</button>
+          <button type="button" class="btn btn-ghost btn-sm" data-tree-action="collapse">Свернуть всё</button>
+          <a class="btn btn-ghost btn-sm" th:href="@{|/workspace/repositories/${repo.id}/export/tree?format=txt|}">TXT</a>
+          <a class="btn btn-ghost btn-sm" th:href="@{|/workspace/repositories/${repo.id}/export/tree?format=csv|}">CSV</a>
+          <a class="btn btn-ghost btn-sm" th:href="@{|/workspace/repositories/${repo.id}/export/tree?format=json|}">JSON</a>
+        </div>
+      </div>
+      <ul class="dep-tree" id="dep-tree" th:if="${!#lists.isEmpty(treeRoots)}">
+        <th:block th:each="node : ${treeRoots}">
+          <li th:replace="~{workspace/fragments :: treeNode(node=${node})}"></li>
+        </th:block>
+      </ul>
+      <p class="muted" th:if="${#lists.isEmpty(treeRoots)}">Дерево пустое.</p>
+    </div>
+  </th:block>
+
+  <!-- Issues / vulns -->
+  <th:block th:if="${tab == 'issues'}">
+    <div class="card" th:if="${latestRun == null}">
+      <p class="muted">Нет данных — сначала выполните scan.</p>
+    </div>
+    <div class="card table-wrap" th:if="${latestRun != null}">
+      <div class="section-card-head">
+        <div>
+          <h2>Findings</h2>
+          <p class="muted" th:text="|Скан ${latestRun.analyzedAt} · показано ${#lists.size(issues)}|">scan</p>
+        </div>
+        <div class="toolbar">
+          <a class="btn btn-ghost btn-sm"
+             th:href="@{/workspace/repositories/{id}/export/vulnerabilities(id=${repo.id},format=csv,severity=${severityFilter})}">CSV</a>
+          <a class="btn btn-ghost btn-sm"
+             th:href="@{/workspace/repositories/{id}/export/vulnerabilities(id=${repo.id},format=xlsx,severity=${severityFilter})}">XLSX</a>
+          <a class="btn btn-ghost btn-sm"
+             th:href="@{/workspace/repositories/{id}/export/vulnerabilities(id=${repo.id},format=pdf,severity=${severityFilter})}">PDF</a>
+          <form method="get" th:action="@{|/workspace/repositories/${repo.id}|}" class="filter-bar">
+            <input type="hidden" name="tab" value="issues"/>
+            <label class="field field--inline">Severity
+              <select name="severity" onchange="this.form.submit()">
+                <option value="" th:selected="${severityFilter == null or severityFilter == ''}">Все</option>
+                <option value="CRITICAL" th:selected="${severityFilter == 'CRITICAL'}">CRITICAL</option>
+                <option value="ERROR" th:selected="${severityFilter == 'ERROR'}">ERROR (HIGH)</option>
+                <option value="WARNING" th:selected="${severityFilter == 'WARNING'}">WARNING</option>
+                <option value="INFO" th:selected="${severityFilter == 'INFO'}">INFO</option>
+              </select>
+            </label>
+          </form>
+        </div>
+      </div>
+      <table>
+        <thead>
+        <tr>
+          <th>Type</th>
+          <th>Severity</th>
+          <th>Библиотека</th>
+          <th>Версия</th>
+          <th>Исправлено в</th>
+          <th>CVE</th>
+          <th>CVSS</th>
+          <th>Title</th>
+          <th>Recommendation</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="i : ${issues}">
+          <td th:text="${i.issueType}">TYPE</td>
+          <td><span class="sev" th:classappend="' sev--' + ${#strings.toLowerCase(i.severity)}" th:text="${i.severity}">ERROR</span></td>
+          <td class="mono" th:text="${i.packageName()}">g:a</td>
+          <td class="mono" th:text="${i.packageVersion()}">1.0</td>
+          <td class="mono" th:text="${i.fixedVersionDisplay()}">—</td>
+          <td class="mono">
+            <a th:if="${i.advisoryUrl() != null}" th:href="${i.advisoryUrl()}" target="_blank" rel="noopener" th:text="${i.cve}">CVE</a>
+            <span th:if="${i.advisoryUrl() == null}">—</span>
+          </td>
+          <td th:text="${i.cvss} ?: '-'">-</td>
+          <td th:text="${i.title}">title</td>
+          <td th:text="${i.recommendation}">rec</td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(issues)}">
+          <td colspan="9" class="muted">Проблем не найдено</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </th:block>
+
+  <!-- History -->
+  <th:block th:if="${tab == 'history'}">
+    <div class="card table-wrap">
+      <table>
+        <thead>
+        <tr>
+          <th>When</th><th>Status</th><th>Nodes</th><th>Vulns</th><th>Conflicts</th><th>Message</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="run : ${scanHistory}">
+          <td th:text="${run.analyzedAt}">-</td>
+          <td th:text="${run.status}">SUCCESS</td>
+          <td th:text="${run.nodeCount}">0</td>
+          <td th:text="${run.vulnerabilityCount}">0</td>
+          <td th:text="${run.conflictCount}">0</td>
+          <td th:text="${run.message}">msg</td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(scanHistory)}">
+          <td colspan="6" class="muted">История пуста</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </th:block>
+</th:block>
+</body>
+</html>

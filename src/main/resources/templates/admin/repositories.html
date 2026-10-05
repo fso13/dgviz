@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/shell :: page('Репозитории (admin) · DGViz', 'admin-repositories', ~{::main})}"
+      xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:fragment="main">
+  <div th:if="${success}" class="flash ok" th:text="${success}"></div>
+  <div th:if="${error}" class="flash err" th:text="${error}"></div>
+  <div th:if="${createdRepoId != null}" class="card">
+    <p class="eyebrow">gradle plugin</p>
+    <h2>Подключение плагина</h2>
+    <pre class="contract-example" th:text="|plugins {
+  id(&quot;io.github.dgviz.scan&quot;) version &quot;0.3.0&quot;
+}
+dgviz {
+  host = &quot;http://localhost:8080&quot;
+  repositoryId = ${createdRepoId}
+  token = &quot;${createdScanToken}&quot;
+  createIssues = false
+}|">plugin snippet</pre>
+    <p class="muted">Затем: <code>./gradlew dgvizScan</code> — отчёт в <code>build/reports/dgviz/</code></p>
+  </div>
+
+  <h1>Репозитории</h1>
+  <p class="muted">
+    Репозиторий можно добавить только в проекты, доступные вам через группы.
+    Получите <code>repositoryId</code> + <code>scan token</code> для Gradle-плагина.
+  </p>
+
+  <div class="card">
+    <h2>Добавить репозиторий</h2>
+    <form th:action="@{/admin/repositories}" method="post" class="stack form-stack">
+      <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+      <div class="form-grid-2">
+        <label class="field">Проект
+          <select name="projectId" required>
+            <option value="">Выберите проект…</option>
+            <option th:each="p : ${projects}" th:value="${p.id}" th:text="${p.name}"></option>
+          </select>
+        </label>
+        <label class="field">Название
+          <input name="name" placeholder="my-service" required/>
+        </label>
+        <label class="field">Тип
+          <select name="sourceType">
+            <option value="PLUGIN">Plugin (Gradle scan)</option>
+            <option value="GITLAB">GitLab (+ issues)</option>
+            <option value="GITHUB">GitHub (+ issues)</option>
+          </select>
+        </label>
+        <label class="field">Сборка
+          <select name="buildSystem">
+            <option value="gradle" selected>Gradle</option>
+            <option value="maven">Maven (скоро)</option>
+          </select>
+        </label>
+        <label class="field">Ветка
+          <input name="defaultBranch" value="main"/>
+        </label>
+        <label class="field">VCS URL
+          <input name="vcsUrl" placeholder="https://gitlab.com/group/project.git"/>
+        </label>
+        <label class="field">Path (group/project или owner/repo)
+          <input name="gitlabPath" placeholder="group/project"/>
+        </label>
+        <label class="field">Host (GitLab self-hosted)
+          <input name="remoteHost" placeholder="https://gitlab.example.com"/>
+        </label>
+        <label class="field">Access token (для создания issues)
+          <input name="accessToken" type="password" placeholder="glpat-… / ghp_…" autocomplete="off"/>
+          <span class="field-hint">Нужен только если createIssues=true в плагине</span>
+        </label>
+        <label class="field checkbox">
+          <input type="checkbox" name="createIssuesDefault" value="true"/>
+          Создавать issues по умолчанию
+        </label>
+      </div>
+      <div class="toolbar">
+        <button class="btn btn-sm" type="submit">Создать</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="card" th:each="r : ${repositories}">
+    <div class="section-card-head">
+      <div>
+        <p class="eyebrow" th:text="|${r.sourceType} · id=${r.id}|">PLUGIN</p>
+        <h2 th:text="${r.name}">repo</h2>
+        <p class="muted" th:text="${r.project.name}">project</p>
+      </div>
+      <div class="toolbar">
+        <form th:action="@{|/admin/repositories/${r.id}/token|}" method="post">
+          <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+          <button class="btn btn-ghost btn-sm" type="submit">New scan token</button>
+        </form>
+        <form th:action="@{|/admin/repositories/${r.id}/delete|}" method="post">
+          <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+          <button class="danger" type="submit">Delete</button>
+        </form>
+      </div>
+    </div>
+    <p class="muted mono" th:text="'scan token: ' + ${r.scanToken}">token</p>
+
+    <form th:action="@{|/admin/repositories/${r.id}|}" method="post" class="stack form-stack">
+      <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+      <div class="form-grid-2">
+        <label class="field">Проект
+          <select name="projectId">
+            <option th:each="p : ${projects}" th:value="${p.id}" th:text="${p.name}"
+                    th:selected="${r.project.id == p.id}"></option>
+          </select>
+        </label>
+        <label class="field">Название
+          <input name="name" th:value="${r.name}"/>
+        </label>
+        <label class="field">Тип
+          <select name="sourceType">
+            <option th:each="t : ${sourceTypes}" th:value="${t}" th:text="${t}"
+                    th:selected="${t == r.sourceType}"></option>
+          </select>
+        </label>
+        <label class="field">Сборка
+          <select name="buildSystem">
+            <option value="gradle" th:selected="${r.buildSystem == 'gradle'}">Gradle</option>
+            <option value="maven" th:selected="${r.buildSystem == 'maven'}">Maven</option>
+          </select>
+        </label>
+        <label class="field">Ветка
+          <input name="defaultBranch" th:value="${r.defaultBranch}"/>
+        </label>
+        <label class="field">VCS URL
+          <input name="vcsUrl" th:value="${r.vcsUrl}"/>
+        </label>
+        <label class="field">Path
+          <input name="gitlabPath" th:value="${r.gitlabPath}"/>
+        </label>
+        <label class="field">Host
+          <input name="remoteHost" th:value="${r.remoteHost}"/>
+        </label>
+        <label class="field">Access token
+          <input name="accessToken" type="password"
+                 th:placeholder="${r.hasAccessToken()} ? '•••• (оставьте, чтобы не менять)' : 'token'"
+                 autocomplete="off"/>
+        </label>
+        <label class="field checkbox">
+          <input type="checkbox" name="createIssuesDefault" value="true" th:checked="${r.createIssuesDefault}"/>
+          createIssues по умолчанию
+        </label>
+      </div>
+      <div class="toolbar">
+        <button class="btn btn-sm" type="submit">Save</button>
+      </div>
+    </form>
+  </div>
+</th:block>
+</body>
+</html>

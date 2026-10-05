@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<li th:fragment="treeNode(node)" class="dep-tree__node"
+    th:classappend="${node != null and node.children != null and !#lists.isEmpty(node.children)} ? ' has-children'">
+  <th:block th:if="${node != null}">
+    <div class="dep-tree__row">
+      <button type="button" class="dep-tree__toggle"
+              th:if="${node.children != null and !#lists.isEmpty(node.children)}"
+              aria-expanded="true" aria-label="Toggle"></button>
+      <span class="dep-tree__toggle dep-tree__toggle--leaf"
+            th:if="${node.children == null or #lists.isEmpty(node.children)}"></span>
+      <span class="dep-tree__ga mono"
+            th:text="${node.dependency.groupId + ':' + node.dependency.artifactId}">g:a</span>
+      <span class="dep-tree__ver" th:text="${node.dependency.version}">1.0</span>
+      <span class="dep-tree__meta dep-tree__meta--direct"
+            th:if="${node.dependency.origin == 'DIRECT'}"
+            th:text="${node.dependency.origin}">DIRECT</span>
+      <span class="dep-tree__meta dep-tree__meta--project"
+            th:if="${node.dependency.origin == 'PROJECT'}"
+            th:text="${node.dependency.origin}">PROJECT</span>
+      <span class="dep-tree__meta"
+            th:if="${node.dependency.origin != 'DIRECT' and node.dependency.origin != 'PROJECT'}"
+            th:text="${node.dependency.origin}">TRANSITIVE</span>
+      <span class="dep-tree__scope muted" th:text="${node.dependency.scope}">RUNTIME</span>
+    </div>
+    <ul class="dep-tree__children" th:if="${node.children != null and !#lists.isEmpty(node.children)}">
+      <th:block th:each="child : ${node.children}">
+        <li th:replace="~{workspace/fragments :: treeNode(node=${child})}"></li>
+      </th:block>
+    </ul>
+  </th:block>
+</li>
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/shell :: page(${project.name} + ' · DGViz', 'ws-projects', ~{::main})}"
+      xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+<th:block th:fragment="main">
+  <p class="muted"><a th:href="@{/workspace/projects}">← Все проекты</a></p>
+  <div class="section-card-head" style="margin-bottom:1rem">
+    <div>
+      <h1 th:text="${project.name}">Project</h1>
+      <p class="muted">
+        Group:
+        <span th:text="${project.group != null ? project.group.name : '—'}">—</span>
+        <span th:if="${project.description != null}"> · </span>
+        <span th:text="${project.description}">desc</span>
+      </p>
+    </div>
+    <div class="toolbar" sec:authorize="hasAuthority('PERM_REPO_MANAGE')">
+      <a class="btn btn-sm" th:href="@{/admin/repositories}">Добавить репозиторий</a>
+    </div>
+  </div>
+
+  <div class="card table-wrap">
+    <h2>Repositories</h2>
+    <table>
+      <thead>
+      <tr>
+        <th>ID</th>
+        <th>Repository</th>
+        <th>Type</th>
+        <th>Build</th>
+        <th>Last scan</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="r : ${repositories}">
+        <td class="mono" th:text="${r.id}">1</td>
+        <td>
+          <a class="repo-link" th:href="@{|/workspace/repositories/${r.id}|}" th:text="${r.name}">repo</a>
+        </td>
+        <td><span class="badge" th:text="${r.sourceType}">PLUGIN</span></td>
+        <td th:text="${r.buildSystem} ?: 'gradle'">gradle</td>
+        <td>
+          <th:block th:with="run=${latestRuns.get(r.id)}">
+            <span th:if="${run != null}">
+              <span th:text="${run.analyzedAt}">-</span>
+              · nodes <span th:text="${run.nodeCount}">0</span>
+              · vulns <span th:text="${run.vulnerabilityCount}">0</span>
+              · <a th:href="@{|/workspace/repositories/${r.id}?tab=tree|}">tree</a>
+              · <a th:href="@{|/workspace/repositories/${r.id}?tab=issues|}">issues</a>
+            </span>
+            <span th:if="${run == null}" class="muted">ожидает dgvizScan</span>
+          </th:block>
+        </td>
+      </tr>
+      <tr th:if="${#lists.isEmpty(repositories)}">
+        <td colspan="5" class="muted">В проекте пока нет репозиториев</td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+</th:block>
+</body>
+</html>

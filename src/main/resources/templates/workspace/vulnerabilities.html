@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/shell :: page('База CVE · DGViz', 'ws-vulnerabilities', ~{::main})}"
+      xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:fragment="main">
+  <h1>Локальная база уязвимостей</h1>
+  <p class="muted">
+    Синхронизированная CVE-база (<span th:text="${totalCount}">0</span> записей).
+    Источники обновляются в Admin → CVE Sync.
+  </p>
+
+  <form class="card filters-panel" method="get" th:action="@{/workspace/vulnerabilities}">
+    <div class="filters-grid">
+      <label class="field">Поиск
+        <input type="search" name="q" th:value="${q}" placeholder="CVE, пакет, описание…"/>
+      </label>
+      <label class="field">Источник
+        <select name="source">
+          <option value="">Все</option>
+          <option th:each="s : ${sources}" th:value="${s}" th:text="${s}" th:selected="${s == source}"></option>
+        </select>
+      </label>
+      <label class="field">Severity
+        <select name="severity">
+          <option value="">Все</option>
+          <option th:each="s : ${severities}" th:value="${s}" th:text="${s}" th:selected="${s == severity}"></option>
+        </select>
+      </label>
+      <div class="field field--actions">
+        <span class="field__label-spacer" aria-hidden="true">&nbsp;</span>
+        <button class="btn btn-sm" type="submit">Применить</button>
+        <a class="btn btn-ghost btn-sm" th:href="@{/workspace/vulnerabilities}">Сброс</a>
+      </div>
+    </div>
+  </form>
+
+  <div class="card table-wrap">
+    <table>
+      <thead>
+      <tr>
+        <th>CVE</th><th>Source</th><th>Severity</th><th>CVSS</th>
+        <th>Package</th><th>Title</th><th>Synced</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="v : ${vulnerabilities}">
+        <td class="mono" th:text="${v.cveId}">CVE-2024-0001</td>
+        <td><span class="badge" th:text="${v.source}">OSV</span></td>
+        <td th:text="${v.severity} ?: '-'">HIGH</td>
+        <td th:text="${v.cvss} ?: '-'">7.5</td>
+        <td class="mono" th:text="${v.packageName} ?: '-'">g:a</td>
+        <td th:text="${v.title} ?: '-'">title</td>
+        <td class="cell-muted" th:text="${v.syncedAt}">-</td>
+      </tr>
+      <tr th:if="${#lists.isEmpty(vulnerabilities)}">
+        <td colspan="7" class="muted">Нет записей. Запустите CVE Sync или измените фильтры.</td>
+      </tr>
+      </tbody>
+    </table>
+    <div class="table-footer" th:if="${page != null and page.totalPages > 1}">
+      <span class="muted"
+            th:text="'Стр. ' + (${page.number} + 1) + ' / ' + ${page.totalPages} + ' · ' + ${page.totalElements} + ' записей'">
+      </span>
+      <div class="toolbar">
+        <a class="btn btn-ghost btn-sm"
+           th:if="${page.hasPrevious()}"
+           th:href="@{/workspace/vulnerabilities(source=${source},severity=${severity},q=${q},page=${page.number - 1})}">←</a>
+        <a class="btn btn-ghost btn-sm"
+           th:if="${page.hasNext()}"
+           th:href="@{/workspace/vulnerabilities(source=${source},severity=${severity},q=${q},page=${page.number + 1})}">→</a>
+      </div>
+    </div>
+  </div>
+
+  <h2>Находки в анализах</h2>
+  <p class="muted">Уязвимости, найденные при анализе доступных вам репозиториев.</p>
+  <div class="card table-wrap">
+    <table>
+      <thead><tr><th>Severity</th><th>Title</th><th>CVE</th><th>CVSS</th><th>Artifacts</th></tr></thead>
+      <tbody>
+      <tr th:each="f : ${findings}">
+        <td th:text="${f.severity}">CRITICAL</td>
+        <td th:text="${f.title}">title</td>
+        <td class="mono" th:text="${f.cve} ?: '-'">CVE</td>
+        <td th:text="${f.cvss} ?: '-'">9.8</td>
+        <td class="mono" th:text="${f.artifactKeys}">g:a:v</td>
+      </tr>
+      <tr th:if="${#lists.isEmpty(findings)}">
+        <td colspan="5" class="muted">Пока нет находок — проанализируйте репозиторий.</td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+</th:block>
+</body>
+</html>

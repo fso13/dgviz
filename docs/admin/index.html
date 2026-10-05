@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Документация администратора · DGViz</title>
+  <link rel="stylesheet" href="../assets/css/site.css"/>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap site-header__inner">
+      <a class="brand" href="../"><span>DG</span>Viz</a>
+      <nav class="nav">
+        <a href="../">Продукт</a>
+        <a href="../user/">Пользователям</a>
+        <a class="is-active" href="./">Админам</a>
+        <a href="../demo/">Демо</a>
+        <a class="btn btn-sm" href="https://github.com/fso13/dgviz">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="wrap page-title">
+    <h1>Документация для администраторов</h1>
+    <p>Установка, Docker/GHCR, пользователи, ACL, sync CVE, уведомления и релизы.</p>
+  </div>
+
+  <div class="wrap doc-layout">
+    <aside class="doc-nav">
+      <a href="#install">Установка</a>
+      <a href="#ghcr">Образы GHCR</a>
+      <a href="#env">Переменные</a>
+      <a href="#users">Пользователи</a>
+      <a href="#acl">Группы и ACL</a>
+      <a href="#repos">Репозитории</a>
+      <a href="#sync">CVE sync</a>
+      <a href="#notify">Уведомления</a>
+      <a href="#release">Релизы</a>
+    </aside>
+
+    <article class="doc-content">
+      <h2 id="install">Установка (Docker Compose)</h2>
+<pre>git clone https://github.com/fso13/dgviz.git
+cd dgviz
+docker compose up --build -d</pre>
+      <ul>
+        <li>App: <code>http://localhost:8080</code> — <code>admin</code> / <code>admin</code></li>
+        <li>Notifications: <code>http://localhost:8082</code></li>
+        <li>Adminer: <code>http://localhost:8081</code></li>
+      </ul>
+      <div class="callout">В production сразу смените <code>DGVIZ_ADMIN_PASSWORD</code> и ключ API notifications.</div>
+
+      <h2 id="ghcr">Образы из GitHub Container Registry</h2>
+      <p>После релизного тега образы публикуются в GHCR:</p>
+<pre>docker pull ghcr.io/fso13/dgviz:0.3.0
+docker pull ghcr.io/fso13/dgviz-notifications:0.3.0
+
+# latest указывает на последний релиз
+docker pull ghcr.io/fso13/dgviz:latest</pre>
+      <p>В <code>docker-compose.yml</code> можно заменить <code>build:</code> на <code>image: ghcr.io/fso13/dgviz:&lt;tag&gt;</code>.</p>
+
+      <h2 id="env">Ключевые переменные</h2>
+      <table>
+        <thead><tr><th>Переменная</th><th>Назначение</th></tr></thead>
+        <tbody>
+          <tr><td><code>DGVIZ_DB_*</code></td><td>PostgreSQL</td></tr>
+          <tr><td><code>DGVIZ_ADMIN_USER</code> / <code>PASSWORD</code></td><td>Bootstrap admin</td></tr>
+          <tr><td><code>DGVIZ_PUBLIC_BASE_URL</code></td><td>Базовый URL для invite/ссылок в письмах</td></tr>
+          <tr><td><code>DGVIZ_INVITE_TTL_DAYS</code></td><td>Срок invite (по умолчанию 2)</td></tr>
+          <tr><td><code>DGVIZ_NOTIFICATIONS_URL</code> / <code>API_KEY</code></td><td>Связь с сервисом уведомлений</td></tr>
+          <tr><td><code>NVD_API_KEY</code>, <code>SNYK_TOKEN</code></td><td>Опционально для sync</td></tr>
+          <tr><td><code>DGVIZ_SMTP_*</code></td><td>SMTP для EMAIL-транспорта (notifications)</td></tr>
+        </tbody>
+      </table>
+      <p>Часть значений также хранится в Admin → Settings (<code>invite.ttl-days</code>, <code>invite.public-base-url</code>, sync keys).</p>
+
+      <h2 id="users">Пользователи и invite</h2>
+      <ol>
+        <li>Admin → Users → Создать: username, display name, <strong>email</strong>, роль и флаги прав.</li>
+        <li>Пароль не задаётся — уходит invite-ссылка.</li>
+        <li>Пока пользователь не активировался, статус <em>pending invite</em>; можно Resend invite.</li>
+      </ol>
+
+      <h2 id="acl">Группы и ACL</h2>
+      <ol>
+        <li>Создайте группу и добавьте участников.</li>
+        <li>Назначьте группу проекту.</li>
+        <li>Репозитории проекта наследуют доступ группы.</li>
+      </ol>
+      <p>Права <code>canManageProjects</code> / <code>Repositories</code> / <code>Groups</code> ограничивают админ-действия; чтение workspace всё равно требует членства в группе проекта (кроме ADMIN).</p>
+
+      <h2 id="repos">Репозитории (PLUGIN)</h2>
+      <ol>
+        <li>Admin → Repositories → создать в доступном проекте.</li>
+        <li>Скопировать <code>repositoryId</code> и scan token в Gradle-плагин / CI secrets.</li>
+        <li>Опционально: access token GitLab/GitHub для создания issues и trigger pipeline.</li>
+      </ol>
+<pre>POST /api/v1/repositories/{id}/scan
+Header: X-DGViz-Token: &lt;scan token&gt;</pre>
+
+      <h2 id="sync">CVE sync</h2>
+      <p>Admin → CVE Sync: NVD, OSV, GHSA, Snyk. У каждого источника — enabled, cron, Run now. Расписание перезагружается без рестарта.</p>
+
+      <h2 id="notify">Уведомления</h2>
+      <p>Сервис <code>dgviz-notifications</code>:</p>
+      <ul>
+        <li>Admin → Notifications — конфиг EMAIL/TELEGRAM, тест, лог.</li>
+        <li>EMAIL нужен для invite и рассылки отчётов.</li>
+        <li>Поддерживаются HTML-письма и вложения (PDF/CSV/TXT).</li>
+      </ul>
+
+      <h2 id="release">Релизы</h2>
+      <p>Пайплайн GitHub Actions на тег <code>v*</code>:</p>
+      <ol>
+        <li>Собирает Docker-образы <code>dgviz</code> и <code>dgviz-notifications</code>.</li>
+        <li>Пушит в <code>ghcr.io/fso13/…</code> с тегами версии и <code>latest</code>.</li>
+        <li>Создаёт GitHub Release и прикладывает <code>bootJar</code>.</li>
+      </ol>
+<pre># пример релиза
+git tag v0.3.1
+git push origin v0.3.1</pre>
+    </article>
+  </div>
+
+  <footer class="site-footer">
+    <div class="wrap site-footer__inner">
+      <div>DGViz docs · администраторы</div>
+      <a href="../user/">← Документация пользователя</a>
+    </div>
+  </footer>
+</body>
+</html>

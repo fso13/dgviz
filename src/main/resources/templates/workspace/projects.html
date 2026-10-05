@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/shell :: page('Проекты · DGViz', 'ws-projects', ~{::main})}"
+      xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:fragment="main">
+  <h1>Your projects</h1>
+  <p class="muted">Projects available through your group membership (admins see all). Click a project to see its repositories.</p>
+  <div class="card table-wrap">
+    <table>
+      <thead><tr><th>Name</th><th>Group</th><th>Description</th></tr></thead>
+      <tbody>
+      <tr th:each="p : ${projects}">
+        <td>
+          <a class="repo-link" th:href="@{|/workspace/projects/${p.id}|}" th:text="${p.name}">name</a>
+        </td>
+        <td th:text="${p.group != null ? p.group.name : '-'}">-</td>
+        <td th:text="${p.description}">-</td>
+      </tr>
+      <tr th:if="${#lists.isEmpty(projects)}"><td colspan="3" class="muted">No accessible projects</td></tr>
+      </tbody>
+    </table>
+  </div>
+</th:block>
+</body>
+</html>

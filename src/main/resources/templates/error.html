@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="theme-color" content="#12121e" id="theme-color-meta"/>
+  <title>Ошибка · DGViz</title>
+  <script>
+    (() => {
+      const saved = localStorage.getItem("theme");
+      const prefersLight = window.matchMedia("(prefers-color-scheme: light)").matches;
+      const theme = saved === "light" || saved === "dark" ? saved : prefersLight ? "light" : "dark";
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <link rel="stylesheet" th:href="@{/css/app.css}"/>
+  <link rel="stylesheet" th:href="@{/css/dgviz.css}"/>
+</head>
+<body>
+<main class="container" style="padding-top:3rem">
+  <div class="card">
+    <h1>Something went wrong</h1>
+    <p class="flash err" th:text="${error}">error</p>
+    <a class="btn btn-sm" th:href="@{/}">Back to dashboard</a>
+  </div>
+</main>
+</body>
+</html>

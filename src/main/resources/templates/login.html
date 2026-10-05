@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="theme-color" content="#12121e" id="theme-color-meta"/>
+  <title>Вход · DGViz</title>
+  <script>
+    (() => {
+      const saved = localStorage.getItem("theme");
+      const prefersLight = window.matchMedia("(prefers-color-scheme: light)").matches;
+      const theme = saved === "light" || saved === "dark" ? saved : prefersLight ? "light" : "dark";
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <link rel="preconnect" href="https://resources.jetbrains.com" crossorigin="anonymous"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous"/>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" th:href="@{/css/app.css}"/>
+  <link rel="stylesheet" th:href="@{/css/dgviz.css}"/>
+</head>
+<body class="login-page">
+<div class="login-topbar">
+  <a class="brand" th:href="@{/login}">
+    <span class="brand__mark">DG</span>DGViz
+    <span class="brand__tag">deps</span>
+  </a>
+  <div class="login-topbar__actions">
+    <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Переключить тему" title="Тема">
+      <span class="theme-toggle__icon theme-toggle__icon--sun" aria-hidden="true">☀</span>
+      <span class="theme-toggle__icon theme-toggle__icon--moon" aria-hidden="true">☾</span>
+    </button>
+  </div>
+</div>
+<div class="login-hero">
+  <div class="login-hero__copy">
+    <p class="login-status">
+      <span class="status-dot" aria-hidden="true"></span>
+      dependency graph · cve sync
+    </p>
+    <p class="eyebrow">analyze / visualize</p>
+    <h1 class="login-hero__brand"><span class="login-hero__brand-accent">DG</span>Viz</h1>
+    <p class="login-hero__lead">Анализ Maven и Gradle зависимостей, конфликты версий, интеграция с GitLab и синхронизация CVE.</p>
+    <div th:if="${param.error}" class="flash flash-error">Неверный логин или пароль</div>
+    <div th:if="${param.logout}" class="flash flash-ok">Вы вышли из системы</div>
+    <div th:if="${inviteSuccess}" class="flash flash-ok" th:text="${inviteSuccess}">ok</div>
+    <form th:action="@{/login}" method="post" class="form-grid login-form">
+      <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+      <label>Имя пользователя
+        <input type="text" name="username" required autofocus autocomplete="username"/>
+      </label>
+      <label>Пароль
+        <input type="password" name="password" required autocomplete="current-password"/>
+      </label>
+      <button class="btn" type="submit">Войти</button>
+    </form>
+  </div>
+  <aside class="code-panel" aria-hidden="true">
+    <div class="panel-bar">
+      <span class="panel-dots"></span>
+      <span class="panel-file">DependencyAnalyzer.java</span>
+      <span class="panel-lang">Java</span>
+    </div>
+    <pre class="hero-code"><code><span class="c-line"><span class="c-cmt">// dgviz analyze --format json</span></span>
+<span class="c-line"><span class="c-kw">var</span> graph = analyzer.<span class="c-fn">buildGraph</span>(project);</span>
+<span class="c-line">detector.<span class="c-fn">findConflicts</span>(graph);</span>
+<span class="c-line">cve.<span class="c-fn">match</span>(<span class="c-str">"org.springframework:spring-core"</span>);<span class="c-cursor"></span></span></code></pre>
+  </aside>
+</div>
+<script th:src="@{/js/theme.js}"></script>
+</body>
+</html>

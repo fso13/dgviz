@@ -1,0 +1,17 @@
+stages:
+  - analyze
+
+dependency-graph:
+  stage: analyze
+  image: eclipse-temurin:17-jre
+  script:
+    - curl -L -o dgviz.jar https://github.com/org/dgviz/releases/latest/download/dgviz.jar
+    - java -jar dgviz.jar ci-check --gitlab-token ${GITLAB_TOKEN:-$CI_JOB_TOKEN} --project "$CI_PROJECT_ID" --fail-on-conflict --fail-on-cvss 7
+  artifacts:
+    paths:
+      - reports/dependency-graph.html
+      - reports/dependency-graph.json
+    expire_in: 30 days
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH

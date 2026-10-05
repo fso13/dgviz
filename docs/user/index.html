@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Документация пользователя · DGViz</title>
+  <link rel="stylesheet" href="../assets/css/site.css"/>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap site-header__inner">
+      <a class="brand" href="../"><span>DG</span>Viz</a>
+      <nav class="nav">
+        <a href="../">Продукт</a>
+        <a class="is-active" href="./">Пользователям</a>
+        <a href="../admin/">Админам</a>
+        <a href="../demo/">Демо</a>
+        <a class="btn btn-sm" href="https://github.com/fso13/dgviz">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="wrap page-title">
+    <h1>Документация для пользователей</h1>
+    <p>Как работать с проектами, репозиториями, сканами, экспортом и приглашениями.</p>
+  </div>
+
+  <div class="wrap doc-layout">
+    <aside class="doc-nav">
+      <a href="#login">Вход</a>
+      <a href="#access">Доступ</a>
+      <a href="#workspace">Workspace</a>
+      <a href="#scan">Сканы</a>
+      <a href="#export">Экспорт и почта</a>
+      <a href="#invite">Приглашение</a>
+      <a href="#plugin">Gradle-плагин</a>
+    </aside>
+
+    <article class="doc-content">
+      <h2 id="login">Вход</h2>
+      <p>Откройте URL вашего DGViz и войдите логином/паролем. Если вас пригласили — сначала перейдите по ссылке из письма и задайте пароль.</p>
+
+      <h2 id="access">Доступ к данным</h2>
+      <p>Видимость строится так: <strong>пользователь ∈ группа ← проект ← репозиторий</strong>.</p>
+      <ul>
+        <li>ADMIN видит все проекты и репозитории.</li>
+        <li>USER видит только проекты своей группы (и их репозитории).</li>
+        <li>Флаги «manage projects/repos/groups» дают права на админ-разделы, но не заменяют членство в группе.</li>
+      </ul>
+
+      <h2 id="workspace">Workspace</h2>
+      <ul>
+        <li><code>/workspace/projects</code> — доступные проекты</li>
+        <li><code>/workspace/repositories</code> — репозитории и статус последнего скана</li>
+        <li>Страница репозитория: обзор, дерево зависимостей, уязвимости, история сканов</li>
+        <li><code>/workspace/vulnerabilities</code> — находки по доступным анализам + справочник CVE</li>
+      </ul>
+
+      <h2 id="scan">Сканы</h2>
+      <p>Данные появляются после <code>./gradlew dgvizScan</code> в целевом проекте (или после pipeline в CI).</p>
+      <ul>
+        <li><strong>Пересканировать</strong> — повторный анализ уже сохранённого SBOM/дерева по актуальной CVE DB (плагин не нужен).</li>
+        <li><strong>Обновить дерево (CI)</strong> — триггер GitLab pipeline, чтобы обновить состав зависимостей.</li>
+      </ul>
+
+      <h2 id="export">Экспорт и почта</h2>
+      <p>На странице репозитория (если есть скан):</p>
+      <table>
+        <thead><tr><th>Действие</th><th>Форматы</th></tr></thead>
+        <tbody>
+          <tr><td>Дерево зависимостей</td><td>TXT, CSV, JSON</td></tr>
+          <tr><td>Уязвимости</td><td>CSV, XLSX, PDF</td></tr>
+          <tr><td>SBOM</td><td>JSON (CycloneDX)</td></tr>
+          <tr><td>Отправить отчёт на почту</td><td>PDF + CSV + дерево всем участникам группы с email</td></tr>
+        </tbody>
+      </table>
+      <div class="callout">Письмо уходит только enabled-пользователям группы проекта с заполненным email. Нужен включённый EMAIL-транспорт в notifications.</div>
+
+      <h2 id="invite">Приглашение (если вас добавили)</h2>
+      <ol>
+        <li>Откройте ссылку из письма (действует по умолчанию 2 дня).</li>
+        <li>Задайте пароль (минимум 8 символов).</li>
+        <li>Войдите логином, который указал администратор.</li>
+      </ol>
+
+      <h2 id="plugin">Gradle-плагин (для разработчика репозитория)</h2>
+<pre>plugins {
+  id("io.github.dgviz.scan") version "0.3.0"
+}
+dgviz {
+  host = "https://dgviz.example.com"
+  repositoryId = 12
+  token = System.getenv("DGVIZ_TOKEN") ?: ""
+}</pre>
+      <p>Задача: <code>./gradlew dgvizScan</code>. Отчёты локально: <code>build/reports/dgviz/</code>.</p>
+      <p>Подробнее — в <a href="https://github.com/fso13/dgviz/tree/main/dgviz-gradle-plugin">dgviz-gradle-plugin/README.md</a>.</p>
+    </article>
+  </div>
+
+  <footer class="site-footer">
+    <div class="wrap site-footer__inner">
+      <div>DGViz docs · пользователи</div>
+      <a href="../admin/">Документация администратора →</a>
+    </div>
+  </footer>
+</body>
+</html>

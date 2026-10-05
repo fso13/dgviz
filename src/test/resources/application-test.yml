@@ -1,0 +1,24 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:dgviz;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        globally_quoted_identifiers: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+dgviz:
+  workspace-dir: ${java.io.tmpdir}/dgviz-test-workspace
+  sync:
+    max-pages-per-run: 1
+
+logging:
+  level:
+    org.flywaydb: INFO

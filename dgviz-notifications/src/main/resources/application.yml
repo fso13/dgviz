@@ -1,0 +1,45 @@
+spring:
+  application:
+    name: dgviz-notifications
+  datasource:
+    url: ${DGVIZ_NOTIFY_DB_URL:${DGVIZ_DB_URL:jdbc:postgresql://localhost:5432/dgviz}}
+    username: ${DGVIZ_NOTIFY_DB_USER:${DGVIZ_DB_USER:dgviz}}
+    password: ${DGVIZ_NOTIFY_DB_PASSWORD:${DGVIZ_DB_PASSWORD:dgviz}}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        default_schema: notifications
+  flyway:
+    enabled: true
+    schemas: notifications
+    default-schema: notifications
+    create-schemas: true
+    table: flyway_schema_history
+  mail:
+    host: ${DGVIZ_SMTP_HOST:localhost}
+    port: ${DGVIZ_SMTP_PORT:587}
+    username: ${DGVIZ_SMTP_USER:}
+    password: ${DGVIZ_SMTP_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+server:
+  port: ${DGVIZ_NOTIFICATIONS_PORT:8082}
+
+dgviz:
+  notifications:
+    api-key: ${DGVIZ_NOTIFICATIONS_API_KEY:dgviz-notify-dev-key}
+
+logging:
+  level:
+    io.github.dgviz.notifications: INFO
+    org.springframework.mail: INFO
+    com.sun.mail: INFO
+    jakarta.mail: INFO

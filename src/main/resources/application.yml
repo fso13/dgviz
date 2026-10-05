@@ -1,0 +1,64 @@
+spring:
+  application:
+    name: dgviz
+  datasource:
+    url: ${DGVIZ_DB_URL:jdbc:postgresql://localhost:5432/dgviz}
+    username: ${DGVIZ_DB_USER:dgviz}
+    password: ${DGVIZ_DB_PASSWORD:dgviz}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+  thymeleaf:
+    cache: false
+  servlet:
+    multipart:
+      max-file-size: 256MB
+      max-request-size: 256MB
+  session:
+    store-type: jdbc
+    timeout: ${DGVIZ_SESSION_TIMEOUT:12h}
+    jdbc:
+      initialize-schema: never
+      table-name: SPRING_SESSION
+
+server:
+  port: ${DGVIZ_PORT:8080}
+  servlet:
+    session:
+      tracking-modes: cookie
+      timeout: ${DGVIZ_SESSION_TIMEOUT:12h}
+      cookie:
+        name: DGVIZSESSION
+        http-only: true
+        same-site: lax
+
+dgviz:
+  admin:
+    default-username: ${DGVIZ_ADMIN_USER:admin}
+    default-password: ${DGVIZ_ADMIN_PASSWORD:admin}
+  workspace-dir: ${DGVIZ_WORKSPACE_DIR:/data/dgviz}
+  notifications:
+    base-url: ${DGVIZ_NOTIFICATIONS_URL:http://localhost:8082}
+    api-key: ${DGVIZ_NOTIFICATIONS_API_KEY:dgviz-notify-dev-key}
+  invite:
+    ttl-days: ${DGVIZ_INVITE_TTL_DAYS:2}
+    public-base-url: ${DGVIZ_PUBLIC_BASE_URL:http://localhost:8080}
+  sync:
+    default-cron: "0 0 2 * * *"
+    nvd-api-key: ${NVD_API_KEY:}
+    snyk-api-token: ${SNYK_TOKEN:}
+    page-size: 2000
+    max-pages-per-run: 5
+
+logging:
+  level:
+    io.github.dgviz: INFO
+    io.github.dgviz.notifications: INFO
+    org.springframework.security: WARN

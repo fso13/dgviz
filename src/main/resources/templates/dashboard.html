@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/shell :: page('Dashboard · DGViz', 'dashboard', ~{::main})}"
+      xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:fragment="main">
+  <h1>Dashboard</h1>
+  <p class="muted" th:if="${!adminView}">
+    Показаны только проекты и репозитории, доступные через ваши группы.
+  </p>
+  <div class="grid">
+    <div class="card" th:if="${adminView}"><h3>Users</h3><div class="value" th:text="${userCount}">0</div></div>
+    <div class="card" th:if="${adminView}"><h3>Groups</h3><div class="value" th:text="${groupCount}">0</div></div>
+    <div class="card"><h3>Projects</h3><div class="value" th:text="${projectCount}">0</div></div>
+    <div class="card"><h3>Repositories</h3><div class="value" th:text="${repoCount}">0</div></div>
+    <div class="card" th:if="${adminView}"><h3>Vulnerabilities DB</h3><div class="value" th:text="${vulnCount}">0</div></div>
+  </div>
+
+  <th:block th:if="${adminView}">
+    <h2>CVE sources</h2>
+    <div class="card table-wrap">
+      <table>
+        <thead><tr><th>Source</th><th>Enabled</th><th>Cron</th><th>Last status</th><th>Last sync</th></tr></thead>
+        <tbody>
+        <tr th:each="s : ${sources}">
+          <td th:text="${s.displayName}">NVD</td>
+          <td th:text="${s.enabled}">true</td>
+          <td class="mono" th:text="${s.cronExpression}">0 0 2 * * *</td>
+          <td th:class="'status-' + ${s.lastStatus}" th:text="${s.lastStatus} ?: '-'">-</td>
+          <td th:text="${s.lastSyncedAt} ?: '-'">-</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2>Recent sync runs</h2>
+    <div class="card table-wrap">
+      <table>
+        <thead><tr><th>Source</th><th>Status</th><th>Records</th><th>Started</th><th>Message</th></tr></thead>
+        <tbody>
+        <tr th:each="r : ${runs}">
+          <td th:text="${r.sourceCode}">NVD</td>
+          <td th:class="'status-' + ${r.status}" th:text="${r.status}">OK</td>
+          <td th:text="${r.recordsUpserted}">0</td>
+          <td th:text="${r.startedAt}">-</td>
+          <td th:text="${r.message}">-</td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(runs)}"><td colspan="5" class="muted">No runs yet</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </th:block>
+</th:block>
+</body>
+</html>

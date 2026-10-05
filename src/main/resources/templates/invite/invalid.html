@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Invite invalid · DGViz</title>
+  <link rel="stylesheet" th:href="@{/css/app.css}"/>
+  <link rel="stylesheet" th:href="@{/css/dgviz.css}"/>
+</head>
+<body class="login-page">
+<div class="login-hero">
+  <div class="login-hero__copy">
+    <h1>Invite unavailable</h1>
+    <p class="flash err" th:text="${error}">expired</p>
+    <p class="muted">Ask an administrator to resend the invitation.</p>
+    <a class="btn" th:href="@{/login}">Go to login</a>
+  </div>
+</div>
+</body>
+</html>

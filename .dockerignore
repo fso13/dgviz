@@ -1,0 +1,11 @@
+.Dockerfile
+.dockerignore
+.git
+.gradle
+build
+**/build
+reports
+*.md
+тз.md
+.idea
+.cursor

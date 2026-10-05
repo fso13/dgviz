@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/shell :: page('Пользователи · DGViz', 'admin-users', ~{::main})}"
+      xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:fragment="main">
+  <div th:if="${success}" class="flash ok" th:text="${success}"></div>
+  <div th:if="${error}" class="flash err" th:text="${error}"></div>
+
+  <div class="section-card-head" style="margin-bottom:1rem">
+    <div>
+      <h1>Users</h1>
+      <p class="muted">
+        При создании пароль не задаётся — на email уходит invite-ссылка (срок в настройках
+        <code>invite.ttl-days</code>, по умолчанию 2 дня).
+      </p>
+    </div>
+    <div class="toolbar">
+      <button type="button" class="btn btn-sm" data-open-modal="create-user-modal">Создать</button>
+    </div>
+  </div>
+
+  <div class="card table-wrap">
+    <table>
+      <thead>
+      <tr>
+        <th>Username</th>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Role</th>
+        <th>Permissions</th>
+        <th>Status</th>
+        <th></th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="u : ${users}">
+        <td class="mono" th:text="${u.username}">admin</td>
+        <td th:text="${u.displayName}">Admin</td>
+        <td th:text="${u.email} ?: '—'">—</td>
+        <td><span class="role-badge" th:classappend="${u.role.name() == 'ADMIN'} ? ' role-badge--admin' : ' role-badge--user'" th:text="${u.role}">ADMIN</span></td>
+        <td class="muted" style="font-size:0.8rem">
+          <span th:if="${u.role.name() == 'ADMIN'}">all</span>
+          <span th:if="${u.role.name() != 'ADMIN'}">
+            <span th:if="${u.canManageProjects}">projects </span>
+            <span th:if="${u.canManageRepositories}">repos </span>
+            <span th:if="${u.canManageGroups}">groups</span>
+            <span th:if="${!u.canManageProjects and !u.canManageRepositories and !u.canManageGroups}">—</span>
+          </span>
+        </td>
+        <td>
+          <span th:if="${u.enabled}">active</span>
+          <span th:if="${!u.enabled}" class="muted">pending invite</span>
+        </td>
+        <td class="cell-actions">
+          <div class="toolbar">
+            <button type="button"
+                    class="btn btn-ghost btn-sm"
+                    data-open-modal="edit-user-modal"
+                    th:attr="data-user-id=${u.id},
+                             data-username=${u.username},
+                             data-display-name=${u.displayName},
+                             data-email=${u.email},
+                             data-role=${u.role},
+                             data-enabled=${u.enabled},
+                             data-can-manage-projects=${u.canManageProjects},
+                             data-can-manage-repositories=${u.canManageRepositories},
+                             data-can-manage-groups=${u.canManageGroups}">Edit</button>
+            <form th:if="${!u.enabled}" th:action="@{|/admin/users/${u.id}/invite|}" method="post">
+              <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+              <button class="btn btn-ghost btn-sm" type="submit">Resend invite</button>
+            </form>
+            <form th:action="@{|/admin/users/${u.id}/delete|}" method="post"
+                  onsubmit="return confirm('Delete user ' + this.dataset.username + '?');"
+                  th:attr="data-username=${u.username}">
+              <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+              <button class="danger btn-sm" type="submit">Delete</button>
+            </form>
+          </div>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="ui-modal" id="create-user-modal" hidden>
+    <div class="ui-modal__backdrop" data-close-modal></div>
+    <div class="ui-modal__dialog ui-modal__dialog--wide" role="dialog" aria-modal="true" aria-labelledby="create-user-title">
+      <div class="ui-modal__bar">
+        <h2 id="create-user-title">Invite user</h2>
+        <button type="button" class="btn btn-ghost btn-sm" data-close-modal aria-label="Close">✕</button>
+      </div>
+      <form th:action="@{/admin/users}" method="post" class="ui-modal__body stack">
+        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        <label class="field">Username
+          <input type="text" name="username" required autocomplete="off"/>
+        </label>
+        <label class="field">Display name
+          <input type="text" name="displayName" required/>
+        </label>
+        <label class="field">Email
+          <input type="email" name="email" required placeholder="user@company.com"/>
+        </label>
+        <p class="muted">Password is not set here — an invite link will be emailed.</p>
+        <label class="field">Role
+          <select name="role">
+            <option th:each="r : ${roles}" th:value="${r}" th:text="${r}"></option>
+          </select>
+        </label>
+        <fieldset class="stack" style="border:1px solid var(--line); border-radius:8px; padding:0.75rem">
+          <legend class="muted" style="padding:0 0.35rem">Permissions (для USER)</legend>
+          <label class="checkbox"><input type="checkbox" name="canManageProjects" value="true"/> Manage projects</label>
+          <label class="checkbox"><input type="checkbox" name="canManageRepositories" value="true"/> Manage repositories</label>
+          <label class="checkbox"><input type="checkbox" name="canManageGroups" value="true"/> Manage groups (membership)</label>
+        </fieldset>
+        <div class="toolbar toolbar--modal">
+          <button type="button" class="btn btn-ghost btn-sm" data-close-modal>Отмена</button>
+          <button class="btn btn-sm" type="submit">Send invite</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="ui-modal" id="edit-user-modal" hidden>
+    <div class="ui-modal__backdrop" data-close-modal></div>
+    <div class="ui-modal__dialog ui-modal__dialog--wide" role="dialog" aria-modal="true" aria-labelledby="edit-user-title">
+      <div class="ui-modal__bar">
+        <h2 id="edit-user-title">Редактировать пользователя</h2>
+        <button type="button" class="btn btn-ghost btn-sm" data-close-modal aria-label="Close">✕</button>
+      </div>
+      <form id="edit-user-form" method="post" class="ui-modal__body stack">
+        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        <label class="field">Username
+          <input type="text" id="edit-username" disabled/>
+        </label>
+        <label class="field">Display name
+          <input type="text" name="displayName" id="edit-display-name" required/>
+        </label>
+        <label class="field">Email
+          <input type="email" name="email" id="edit-email"/>
+        </label>
+        <label class="field">Role
+          <select name="role" id="edit-role">
+            <option th:each="r : ${roles}" th:value="${r}" th:text="${r}"></option>
+          </select>
+        </label>
+        <label class="checkbox">
+          <input type="checkbox" name="enabled" id="edit-enabled" value="true"/>
+          Enabled
+        </label>
+        <fieldset class="stack" style="border:1px solid var(--line); border-radius:8px; padding:0.75rem">
+          <legend class="muted" style="padding:0 0.35rem">Permissions (для USER)</legend>
+          <label class="checkbox"><input type="checkbox" name="canManageProjects" id="edit-can-manage-projects" value="true"/> Manage projects</label>
+          <label class="checkbox"><input type="checkbox" name="canManageRepositories" id="edit-can-manage-repositories" value="true"/> Manage repositories</label>
+          <label class="checkbox"><input type="checkbox" name="canManageGroups" id="edit-can-manage-groups" value="true"/> Manage groups (membership)</label>
+        </fieldset>
+        <label class="field">Set password manually (optional)
+          <input type="password" name="password" id="edit-password" placeholder="leave blank to keep / use invite" autocomplete="new-password"/>
+        </label>
+        <div class="toolbar toolbar--modal">
+          <button type="button" class="btn btn-ghost btn-sm" data-close-modal>Отмена</button>
+          <button class="btn btn-sm" type="submit">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script th:src="@{/js/admin-users.js}"></script>
+</th:block>
+</body>
+</html>

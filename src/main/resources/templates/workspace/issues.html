@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/shell :: page('Issues · DGViz', 'ws-repositories', ~{::main})}"
+      xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:fragment="main">
+  <nav class="breadcrumb">
+    <a th:href="@{/workspace/repositories}">Репозитории</a>
+    <span class="breadcrumb__sep">/</span>
+    <a th:href="@{|/workspace/analysis/${run.id}/tree|}">Дерево</a>
+    <span class="breadcrumb__sep">/</span>
+    <span>Issues</span>
+  </nav>
+  <h1>Analysis issues</h1>
+  <p class="muted" th:text="${run.repository.name + ' · ' + run.analyzedAt}">repo</p>
+  <div class="card table-wrap">
+    <table>
+      <thead><tr><th>Type</th><th>Severity</th><th>Title</th><th>Description</th><th>Recommendation</th><th>CVE</th><th>CVSS</th></tr></thead>
+      <tbody>
+      <tr th:each="i : ${issues}">
+        <td th:text="${i.issueType}">TYPE</td>
+        <td th:text="${i.severity}">ERROR</td>
+        <td th:text="${i.title}">title</td>
+        <td th:text="${i.description}">desc</td>
+        <td th:text="${i.recommendation}">rec</td>
+        <td class="mono" th:text="${i.cve} ?: '-'">-</td>
+        <td th:text="${i.cvss} ?: '-'">-</td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+</th:block>
+</body>
+</html>

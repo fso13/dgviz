@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/shell :: page('Уведомления · DGViz', 'admin-notifications', ~{::main})}"
+      xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:fragment="main">
+  <div th:if="${success}" class="flash ok" th:text="${success}"></div>
+  <div th:if="${error}" class="flash err" th:text="${error}"></div>
+
+  <h1>Notifications</h1>
+  <p class="muted">
+    Отдельный микросервис транспортов (email, Telegram). Настройки применяются сразу в сервисе уведомлений.
+  </p>
+
+  <div class="card" th:if="${!reachable}">
+    <p class="flash err">Сервис уведомлений недоступен. Проверьте контейнер <code>notifications</code> и
+      <code>DGVIZ_NOTIFICATIONS_URL</code>.</p>
+  </div>
+
+  <th:block th:if="${reachable}">
+    <div class="card" th:each="t : ${transports}">
+      <h2 th:text="${t['transport']}">EMAIL</h2>
+      <form th:action="@{|/admin/notifications/transports/${t['transport']}|}" method="post" class="stack">
+        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        <label class="checkbox">
+          <input type="checkbox" name="enabled" value="true" th:checked="${t['enabled'] == true}"/>
+          Enabled
+        </label>
+
+        <th:block th:if="${t['transport'] == 'EMAIL'}">
+          <div class="form-grid-2" th:with="cfg=${t['config']}">
+            <label class="field">From
+              <input type="text" name="config.from" th:value="${cfg != null ? cfg['from'] : ''}"/>
+            </label>
+            <label class="field">SMTP host
+              <input type="text" name="config.host" th:value="${cfg != null ? cfg['host'] : ''}"/>
+            </label>
+            <label class="field">Port
+              <input type="number" name="config.port" th:value="${cfg != null and cfg['port'] != null ? cfg['port'] : 587}"/>
+            </label>
+            <label class="field">Username
+              <input type="text" name="config.username" th:value="${cfg != null ? cfg['username'] : ''}"/>
+            </label>
+            <label class="field">Password
+              <input type="password" name="config.password" th:value="${cfg != null ? cfg['password'] : ''}"
+                     placeholder="leave masked to keep"/>
+            </label>
+            <label class="checkbox" style="align-self:end">
+              <input type="checkbox" name="config.starttls" value="true"
+                     th:checked="${cfg == null or cfg['starttls'] == null or cfg['starttls'] == true}"/>
+              STARTTLS
+            </label>
+          </div>
+        </th:block>
+
+        <th:block th:if="${t['transport'] == 'TELEGRAM'}">
+          <div class="form-grid-2" th:with="cfg=${t['config']}">
+            <label class="field">Bot token
+              <input type="password" name="config.botToken" th:value="${cfg != null ? cfg['botToken'] : ''}"
+                     placeholder="leave masked to keep"/>
+            </label>
+            <label class="field">Default chat id
+              <input type="text" name="config.chatId" th:value="${cfg != null ? cfg['chatId'] : ''}"/>
+            </label>
+          </div>
+        </th:block>
+
+        <button class="btn btn-sm" type="submit">Save</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>Test send</h2>
+      <form th:action="@{/admin/notifications/test}" method="post" class="stack">
+        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        <div class="form-grid-2">
+          <label class="field">Transport
+            <select name="transport">
+              <option value="EMAIL">EMAIL</option>
+              <option value="TELEGRAM">TELEGRAM</option>
+            </select>
+          </label>
+          <label class="field">Recipients (email or chat id, comma-separated)
+            <input type="text" name="recipients" placeholder="user@example.com"/>
+          </label>
+          <label class="field">Subject
+            <input type="text" name="subject" value="DGViz test" required/>
+          </label>
+        </div>
+        <label class="field">Body
+          <textarea name="body" rows="4">Hello from DGViz</textarea>
+        </label>
+        <button class="btn btn-sm" type="submit">Send test</button>
+      </form>
+    </div>
+
+    <div class="card table-wrap">
+      <h2>Recent delivery log</h2>
+      <table>
+        <thead>
+        <tr><th>When</th><th>Transport</th><th>Recipient</th><th>Subject</th><th>Status</th><th>Error</th></tr>
+        </thead>
+        <tbody>
+        <tr th:each="l : ${logs}">
+          <td th:text="${l['createdAt']}">-</td>
+          <td th:text="${l['transport']}">EMAIL</td>
+          <td th:text="${l['recipient']}">-</td>
+          <td th:text="${l['subject']}">-</td>
+          <td th:text="${l['status']}">SENT</td>
+          <td class="muted" th:text="${l['errorMessage']}">-</td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(logs)}"><td colspan="6" class="muted">No deliveries yet</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </th:block>
+</th:block>
+</body>
+</html>

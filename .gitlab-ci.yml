@@ -1,0 +1,26 @@
+stages:
+  - test
+  - build
+
+unit-test:
+  stage: test
+  image: eclipse-temurin:21-jdk
+  script:
+    - ./gradlew test --no-daemon
+  artifacts:
+    when: always
+    reports:
+      junit: build/test-results/test/TEST-*.xml
+
+boot-jar:
+  stage: build
+  image: eclipse-temurin:21-jdk
+  script:
+    - ./gradlew bootJar --no-daemon
+  artifacts:
+    paths:
+      - build/libs/*.jar
+    expire_in: 30 days
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_TAG

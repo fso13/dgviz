@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/shell :: page('Проекты (admin) · DGViz', 'admin-projects', ~{::main})}"
+      xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:fragment="main">
+  <div th:if="${success}" class="flash ok" th:text="${success}"></div>
+  <div th:if="${error}" class="flash err" th:text="${error}"></div>
+  <h1>Projects</h1>
+  <p class="muted">
+    Назначьте группу проекту — иначе обычные пользователи его не увидят.
+    Не-админ может назначать только группы, в которых состоит сам.
+  </p>
+  <div class="card">
+    <form th:action="@{/admin/projects}" method="post" class="form-row">
+      <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+      <input type="text" name="name" placeholder="project name" required/>
+      <input type="text" name="description" placeholder="description"/>
+      <select name="groupId" th:required="${!adminView}">
+        <option value="" th:if="${adminView}">— no group —</option>
+        <option th:each="g : ${groups}" th:value="${g.id}" th:text="${g.name}"></option>
+      </select>
+      <button class="btn btn-sm" type="submit">Create</button>
+    </form>
+  </div>
+  <div class="card table-wrap">
+    <table>
+      <thead><tr><th>Name</th><th>Group</th><th>Actions</th></tr></thead>
+      <tbody>
+      <tr th:each="p : ${projects}">
+        <td>
+          <form th:action="@{|/admin/projects/${p.id}|}" method="post" class="form-row">
+            <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <input type="text" name="name" th:value="${p.name}" required/>
+            <input type="text" name="description" th:value="${p.description}"/>
+            <select name="groupId" th:required="${!adminView}">
+              <option value="" th:if="${adminView}">— no group —</option>
+              <option th:each="g : ${groups}" th:value="${g.id}" th:text="${g.name}"
+                      th:selected="${p.group != null and p.group.id == g.id}"></option>
+            </select>
+            <button class="btn btn-sm" type="submit">Save</button>
+          </form>
+        </td>
+        <td th:text="${p.group != null ? p.group.name : '-'}">-</td>
+        <td>
+          <form th:action="@{|/admin/projects/${p.id}/delete|}" method="post">
+            <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <button class="danger" type="submit">Delete</button>
+          </form>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+</th:block>
+</body>
+</html>

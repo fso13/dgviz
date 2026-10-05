@@ -1,0 +1,8 @@
+# Sample DGViz configuration
+# Prefer editing runtime settings in Admin → Settings after first start.
+projectPath: .
+outputDir: reports
+gitlabUrl: https://gitlab.com
+failOnConflict: true
+failOnCvss: 7.0
+serverPort: 8080

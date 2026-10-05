@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html th:fragment="page(title, activeNav, content)" lang="ru"
+      xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="theme-color" content="#12121e" id="theme-color-meta"/>
+  <title th:text="${title}">DGViz</title>
+  <script>
+    (() => {
+      const saved = localStorage.getItem("theme");
+      const prefersLight = window.matchMedia("(prefers-color-scheme: light)").matches;
+      const theme = saved === "light" || saved === "dark" ? saved : prefersLight ? "light" : "dark";
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <link rel="preconnect" href="https://resources.jetbrains.com" crossorigin="anonymous"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous"/>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" th:href="@{/css/app.css}"/>
+  <link rel="stylesheet" th:href="@{/css/dgviz.css}"/>
+</head>
+<body>
+<div class="app-shell" id="app-shell">
+  <header class="topbar topbar--shell">
+    <div class="topbar__start">
+      <button type="button"
+              class="sidebar-toggle"
+              id="sidebar-toggle"
+              aria-label="Открыть меню"
+              aria-controls="app-sidebar"
+              aria-expanded="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z"/></svg>
+      </button>
+      <a class="topbar__brand" th:href="@{/}" title="DGViz">
+        <span class="brand__mark">DG</span>
+        <span class="topbar__brand-text">DGViz</span>
+      </a>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Переключить тему" title="Тема">
+        <span class="theme-toggle__icon theme-toggle__icon--sun" aria-hidden="true">☀</span>
+        <span class="theme-toggle__icon theme-toggle__icon--moon" aria-hidden="true">☾</span>
+      </button>
+      <div class="userbox">
+        <span class="user-avatar"
+              th:text="${#authentication != null and #authentication.name != null and !#strings.isEmpty(#authentication.name) ? #strings.substring(#strings.toUpperCase(#authentication.name),0,1) : 'U'}">U</span>
+        <span class="userbox__name" sec:authentication="name">user</span>
+        <form class="topbar__logout-form" th:action="@{/logout}" method="post">
+          <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+          <button class="btn btn-secondary btn-sm topbar__logout" type="submit">Выйти</button>
+        </form>
+      </div>
+    </div>
+  </header>
+
+  <aside class="sidebar" id="app-sidebar" aria-label="Навигация">
+    <nav class="sidebar-nav">
+      <p class="sidebar-nav__section">Рабочая область</p>
+      <a th:href="@{/}" th:classappend="${activeNav == 'dashboard'} ? ' is-active'">
+        <span class="sidebar-nav__label">Dashboard</span>
+      </a>
+      <a th:href="@{/workspace/projects}" th:classappend="${activeNav == 'ws-projects'} ? ' is-active'">
+        <span class="sidebar-nav__label">Проекты</span>
+      </a>
+      <a th:href="@{/workspace/repositories}" th:classappend="${activeNav == 'ws-repositories'} ? ' is-active'">
+        <span class="sidebar-nav__label">Репозитории</span>
+      </a>
+      <a th:href="@{/workspace/vulnerabilities}" th:classappend="${activeNav == 'ws-vulnerabilities'} ? ' is-active'">
+        <span class="sidebar-nav__label">База CVE</span>
+      </a>
+
+      <p class="sidebar-nav__section"
+         sec:authorize="hasAnyAuthority('ROLE_ADMIN','PERM_PROJECT_MANAGE','PERM_REPO_MANAGE','PERM_GROUP_MANAGE')">
+        Администрирование
+      </p>
+      <a th:href="@{/admin/users}" sec:authorize="hasRole('ADMIN')"
+         th:classappend="${activeNav == 'admin-users'} ? ' is-active'">
+        <span class="sidebar-nav__label">Пользователи</span>
+      </a>
+      <a th:href="@{/admin/groups}"
+         sec:authorize="hasAnyAuthority('ROLE_ADMIN','PERM_GROUP_MANAGE')"
+         th:classappend="${activeNav == 'admin-groups'} ? ' is-active'">
+        <span class="sidebar-nav__label">Группы</span>
+      </a>
+      <a th:href="@{/admin/projects}"
+         sec:authorize="hasAnyAuthority('ROLE_ADMIN','PERM_PROJECT_MANAGE')"
+         th:classappend="${activeNav == 'admin-projects'} ? ' is-active'">
+        <span class="sidebar-nav__label">Проекты (admin)</span>
+      </a>
+      <a th:href="@{/admin/repositories}"
+         sec:authorize="hasAnyAuthority('ROLE_ADMIN','PERM_REPO_MANAGE')"
+         th:classappend="${activeNav == 'admin-repositories'} ? ' is-active'">
+        <span class="sidebar-nav__label">Репозитории (admin)</span>
+      </a>
+      <a th:href="@{/admin/sync}" sec:authorize="hasRole('ADMIN')"
+         th:classappend="${activeNav == 'admin-sync'} ? ' is-active'">
+        <span class="sidebar-nav__label">CVE Sync</span>
+      </a>
+      <a th:href="@{/admin/settings}" sec:authorize="hasRole('ADMIN')"
+         th:classappend="${activeNav == 'admin-settings'} ? ' is-active'">
+        <span class="sidebar-nav__label">Настройки</span>
+      </a>
+      <a th:href="@{/admin/notifications}" sec:authorize="hasRole('ADMIN')"
+         th:classappend="${activeNav == 'admin-notifications'} ? ' is-active'">
+        <span class="sidebar-nav__label">Уведомления</span>
+      </a>
+    </nav>
+    <div class="sidebar__footer">
+      <button type="button" class="sidebar-collapse" id="sidebar-collapse" aria-expanded="true"
+              aria-label="Свернуть навигацию" title="Свернуть навигацию">
+        <svg class="sidebar-collapse__icon sidebar-collapse__icon--collapse" viewBox="0 0 24 24" aria-hidden="true">
+          <path fill="currentColor" d="M15 6l-6 6 6 6V6z"/>
+        </svg>
+        <svg class="sidebar-collapse__icon sidebar-collapse__icon--expand" viewBox="0 0 24 24" aria-hidden="true">
+          <path fill="currentColor" d="M9 6l6 6-6 6V6z"/>
+        </svg>
+        <span class="sidebar-nav__label">Свернуть</span>
+      </button>
+    </div>
+  </aside>
+
+  <div class="app-main">
+    <main class="container" th:insert="${content}"></main>
+    <footer class="site-footer">
+      <span>// dgviz · dependencies · cve</span>
+      <span class="site-footer__pulse">
+        <span class="status-dot" aria-hidden="true"></span>
+        online
+      </span>
+    </footer>
+  </div>
+</div>
+<div class="sidebar-backdrop" id="sidebar-backdrop" hidden></div>
+<script th:src="@{/js/theme.js}"></script>
+<script th:src="@{/js/sidebar.js}"></script>
+<script th:src="@{/js/dep-tree.js}"></script>
+</body>
+</html>

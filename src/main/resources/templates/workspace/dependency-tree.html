@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/shell :: page('Dependency tree · DGViz', 'ws-repositories', ~{::main})}"
+      xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:fragment="main">
+  <nav class="breadcrumb">
+    <a th:href="@{/workspace/repositories}">Репозитории</a>
+    <span class="breadcrumb__sep">/</span>
+    <span>Дерево зависимостей</span>
+  </nav>
+  <h1>Dependency tree</h1>
+  <p class="muted">
+    <span th:text="${run.repository.name}">repo</span>
+    · <span th:text="${run.projectName}">project</span>
+    · analyzed <span th:text="${run.analyzedAt}">-</span>
+    · <a th:href="@{|/workspace/analysis/${run.id}/issues|}">issues (<span th:text="${run.issueCount}">0</span>)</a>
+  </p>
+
+  <div class="card">
+    <ul class="tree" th:if="${treeRoots != null and !#lists.isEmpty(treeRoots)}">
+      <th:block th:each="node : ${treeRoots}">
+        <li th:replace="~{workspace/fragments :: treeNode(node=${node})}"></li>
+      </th:block>
+    </ul>
+    <p class="muted" th:if="${treeRoots == null or #lists.isEmpty(treeRoots)}">
+      Дерево пустое — запустите <code>./gradlew dgvizScan</code> из проекта.
+    </p>
+  </div>
+
+  <h2>Issues summary</h2>
+  <div class="card table-wrap">
+    <table>
+      <thead><tr><th>Type</th><th>Severity</th><th>Title</th><th>CVE</th></tr></thead>
+      <tbody>
+      <tr th:each="i : ${issues}">
+        <td th:text="${i.issueType}">TYPE</td>
+        <td th:text="${i.severity}">ERROR</td>
+        <td th:text="${i.title}">title</td>
+        <td class="mono" th:text="${i.cve} ?: '-'">-</td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+</th:block>
+</body>
+</html>

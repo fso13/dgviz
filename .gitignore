@@ -1,0 +1,14 @@
+# DGViz
+.gradle/
+build/
+out/
+*.iml
+.idea/
+*.class
+*.jar
+!gradle/wrapper/gradle-wrapper.jar
+.DS_Store
+reports/
+*.log
+dgviz.yml
+local.properties
