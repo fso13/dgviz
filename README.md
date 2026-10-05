@@ -51,12 +51,12 @@ Static site lives in [`docs/`](docs/): product overview, user/admin guides, mock
 
 Deployed automatically by [`.github/workflows/pages.yml`](.github/workflows/pages.yml) on pushes to `docs/**`.
 
-One-time setup (required before the first deploy):
+One-time setup (required before the first deploy — `GITHUB_TOKEN` cannot create the Pages site):
 
-1. **Settings → Actions → General → Workflow permissions** → *Read and write permissions*.
-2. **Settings → Pages → Build and deployment → Source** → *GitHub Actions* (save).
+1. **Settings → Pages → Build and deployment → Source** → *GitHub Actions* → Save.
+2. Re-run workflow **Deploy GitHub Pages**.
 
-The workflow uses `enablement: true` and `administration: write` to create the Pages site if needed. If you still see *Resource not accessible by integration*, enable Pages manually (step 2) and re-run **Deploy GitHub Pages**. For **private** repos, GitHub Pages needs a paid plan (Pro/Team/Enterprise).
+For **private** repos, GitHub Pages needs a paid plan (Pro/Team/Enterprise) or make the repo public.
 
 ## Release pipeline (Docker → GHCR)
 

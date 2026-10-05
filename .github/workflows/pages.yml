@@ -12,8 +12,6 @@ permissions:
   contents: read
   pages: write
   id-token: write
-  # Required when enablement: true (first-time Pages site creation)
-  administration: write
 
 concurrency:
   group: pages
@@ -29,12 +27,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Pages site must already exist (Settings → Pages → Source: GitHub Actions).
+      # GITHUB_TOKEN cannot create it via enablement / administration.
       - name: Setup Pages
         uses: actions/configure-pages@v5
-        with:
-          # Creates/enables the Pages site with build type = GitHub Actions
-          # if it was never configured in Settings → Pages.
-          enablement: true
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
