@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Демо · DGViz</title>
+  <link rel="stylesheet" href="../assets/css/site.css"/>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap site-header__inner">
+      <a class="brand" href="../"><span>DG</span>Viz</a>
+      <nav class="nav">
+        <a href="../">Продукт</a>
+        <a href="../user/">Пользователям</a>
+        <a href="../admin/">Админам</a>
+        <a class="is-active" href="./">Демо</a>
+        <a class="btn btn-sm" href="https://github.com/fso13/dgviz">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="wrap page-title">
+    <h1>Интерактивное демо</h1>
+    <p>Статический мок репозитория <code>payments-api</code>: дерево, уязвимости и конфликты — без бэкенда.</p>
+  </div>
+
+  <section class="section" style="padding-top:1rem">
+    <div class="wrap">
+      <div class="demo-shell">
+        <div class="demo-top">
+          <div>
+            <strong id="demo-title">payments-api</strong>
+            <div class="muted" id="demo-subtitle" style="font-size:0.85rem">loading…</div>
+          </div>
+          <div class="demo-tabs" role="tablist">
+            <button type="button" class="demo-tab is-active" data-tab="overview">Обзор</button>
+            <button type="button" class="demo-tab" data-tab="tree">Дерево</button>
+            <button type="button" class="demo-tab" data-tab="vulns">Уязвимости</button>
+            <button type="button" class="demo-tab" data-tab="conflicts">Конфликты</button>
+          </div>
+        </div>
+        <div class="demo-body" id="demo-body">
+          <p class="muted">Загрузка мок-данных…</p>
+        </div>
+      </div>
+      <p class="muted" style="margin-top:1rem;font-size:0.9rem">
+        Данные из <code>assets/data/demo-repo.json</code>. Это иллюстрация UI, не живой инстанс.
+      </p>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="wrap site-footer__inner">
+      <div>DGViz demo · mocks only</div>
+      <a href="../admin/#install">Как запустить настоящий инстанс →</a>
+    </div>
+  </footer>
+
+  <script src="../assets/js/demo.js"></script>
+</body>
+</html>

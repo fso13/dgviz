@@ -1,0 +1,117 @@
+{
+  "repository": {
+    "id": 42,
+    "name": "payments-api",
+    "project": "Acme Platform",
+    "buildSystem": "gradle",
+    "branch": "main"
+  },
+  "scan": {
+    "analyzedAt": "2026-10-05T10:15:00Z",
+    "status": "FAILED",
+    "nodeCount": 48,
+    "vulnerabilityCount": 6,
+    "conflictCount": 2
+  },
+  "tree": [
+    {
+      "name": "com.acme:payments-api",
+      "version": "2.4.1",
+      "children": [
+        {
+          "name": "org.springframework.boot:spring-boot-starter-web",
+          "version": "3.3.4",
+          "children": [
+            { "name": "org.springframework:spring-webmvc", "version": "6.1.13", "children": [] },
+            { "name": "org.apache.tomcat.embed:tomcat-embed-core", "version": "10.1.30", "children": [] }
+          ]
+        },
+        {
+          "name": "com.fasterxml.jackson.core:jackson-databind",
+          "version": "2.17.2",
+          "flag": "conflict",
+          "children": []
+        },
+        {
+          "name": "org.apache.logging.log4j:log4j-core",
+          "version": "2.14.1",
+          "flag": "vuln",
+          "children": []
+        },
+        {
+          "name": "com.google.guava:guava",
+          "version": "31.1-jre",
+          "children": [
+            { "name": "com.google.code.findbugs:jsr305", "version": "3.0.2", "children": [] }
+          ]
+        }
+      ]
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "severity": "CRITICAL",
+      "packageName": "org.apache.logging.log4j:log4j-core",
+      "packageVersion": "2.14.1",
+      "fixedVersion": "2.17.1",
+      "cve": "CVE-2021-44228",
+      "cvss": 10.0,
+      "title": "Log4Shell remote code execution"
+    },
+    {
+      "severity": "HIGH",
+      "packageName": "org.apache.logging.log4j:log4j-core",
+      "packageVersion": "2.14.1",
+      "fixedVersion": "2.17.1",
+      "cve": "CVE-2021-45046",
+      "cvss": 9.0,
+      "title": "Log4j incomplete fix / DoS"
+    },
+    {
+      "severity": "HIGH",
+      "packageName": "com.fasterxml.jackson.core:jackson-databind",
+      "packageVersion": "2.17.2",
+      "fixedVersion": "2.17.3",
+      "cve": "CVE-2020-36518",
+      "cvss": 7.5,
+      "title": "Jackson databind denial of service (demo)"
+    },
+    {
+      "severity": "MEDIUM",
+      "packageName": "com.google.guava:guava",
+      "packageVersion": "31.1-jre",
+      "fixedVersion": "32.0.0-jre",
+      "cve": "CVE-2023-2976",
+      "cvss": 5.5,
+      "title": "Guava temporary directory creation"
+    },
+    {
+      "severity": "MEDIUM",
+      "packageName": "org.apache.tomcat.embed:tomcat-embed-core",
+      "packageVersion": "10.1.30",
+      "fixedVersion": "10.1.34",
+      "cve": "CVE-2024-52316",
+      "cvss": 6.5,
+      "title": "Tomcat request smuggling (demo)"
+    },
+    {
+      "severity": "LOW",
+      "packageName": "commons-io:commons-io",
+      "packageVersion": "2.11.0",
+      "fixedVersion": "2.14.0",
+      "cve": "CVE-2024-47554",
+      "cvss": 3.7,
+      "title": "Commons IO path traversal (demo)"
+    }
+  ],
+  "conflicts": [
+    {
+      "artifact": "com.fasterxml.jackson.core:jackson-databind",
+      "versions": ["2.15.4", "2.17.2"]
+    },
+    {
+      "artifact": "org.slf4j:slf4j-api",
+      "versions": ["1.7.36", "2.0.16"]
+    }
+  ]
+}

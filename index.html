@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>DGViz — Dependency Graph Visualizer</title>
+  <meta name="description" content="DGViz анализирует Maven/Gradle зависимости, находит CVE и конфликты версий, интегрируется с GitLab CI."/>
+  <link rel="stylesheet" href="assets/css/site.css"/>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap site-header__inner">
+      <a class="brand" href="./"><span>DG</span>Viz</a>
+      <nav class="nav" aria-label="Основная">
+        <a href="#features">Возможности</a>
+        <a href="user/">Пользователям</a>
+        <a href="admin/">Админам</a>
+        <a href="demo/">Демо</a>
+        <a class="btn btn-sm" href="https://github.com/fso13/dgviz">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="wrap hero__grid">
+        <div>
+          <p class="eyebrow">open source · java 21 · apache 2.0</p>
+          <h1><span class="accent">DG</span>Viz</h1>
+          <p class="lead">
+            Платформа для анализа дерева зависимостей Maven/Gradle: CVE, конфликты версий,
+            отчёты и интеграция с GitLab CI — без выгрузки исходников.
+          </p>
+          <div class="cta-row">
+            <a class="btn" href="demo/">Смотреть демо</a>
+            <a class="btn btn-ghost" href="user/">Документация</a>
+          </div>
+        </div>
+        <aside class="hero-panel" aria-hidden="true">
+          <div class="hero-panel__bar"><i></i><i></i><i></i></div>
+<pre>./gradlew dgvizScan
+
+✓ dependency tree collected
+✓ CycloneDX SBOM uploaded
+⚠ 2 version conflicts
+✗ 3 HIGH / 1 CRITICAL CVE
+
+report → build/reports/dgviz/</pre>
+        </aside>
+      </div>
+    </section>
+
+    <section class="section" id="features">
+      <div class="wrap">
+        <h2>Что умеет</h2>
+        <p class="section-lead">Сервер + Gradle-плагин: сканируете в CI, смотрите результат в workspace, рассылаете отчёты команде.</p>
+        <div class="feature-grid">
+          <article class="feature">
+            <h3>Gradle plugin scan</h3>
+            <p>Отправляет дерево зависимостей и SBOM в DGViz. Исходный код на сервер не попадает.</p>
+          </article>
+          <article class="feature">
+            <h3>CVE sync</h3>
+            <p>Фоновая синхронизация NVD, OSV, GHSA (и опционально Snyk) с настраиваемым cron.</p>
+          </article>
+          <article class="feature">
+            <h3>Workspace & ACL</h3>
+            <p>Доступ к проектам через группы. Пользователи видят только свои репозитории и сканы.</p>
+          </article>
+          <article class="feature">
+            <h3>Отчёты и почта</h3>
+            <p>Экспорт PDF/CSV/XLSX/TXT и рассылка участникам группы с доступом к репозиторию.</p>
+          </article>
+          <article class="feature">
+            <h3>Invite без пароля</h3>
+            <p>Админ создаёт пользователя — на email уходит ссылка для самостоятельной установки пароля.</p>
+          </article>
+          <article class="feature">
+            <h3>Docker & GHCR</h3>
+            <p>Compose для локального запуска; релизные образы публикуются в GitHub Container Registry.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="quickstart">
+      <div class="wrap">
+        <h2>Быстрый старт</h2>
+        <p class="section-lead">Три шага от нуля до первого скана.</p>
+        <div class="steps">
+          <div class="step">
+            <h3>Поднять стек</h3>
+            <p><code>docker compose up --build</code> — UI на <code>:8080</code>, логин <code>admin</code>/<code>admin</code>.</p>
+          </div>
+          <div class="step">
+            <h3>Создать репозиторий</h3>
+            <p>Admin → Repositories: скопируйте <code>repositoryId</code> и scan token.</p>
+          </div>
+          <div class="step">
+            <h3>Запустить плагин</h3>
+            <p>В проекте: <code>id("io.github.dgviz.scan")</code> и <code>./gradlew dgvizScan</code>.</p>
+          </div>
+        </div>
+        <div class="cta-row" style="margin-top:1.5rem">
+          <a class="btn" href="admin/#install">Инструкция администратора</a>
+          <a class="btn btn-ghost" href="https://github.com/fso13/dgviz/pkgs/container/dgviz">Образы GHCR</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="wrap">
+        <h2>Стек</h2>
+        <p class="section-lead">Java 21 · Spring Boot 4.1 · Spring Security 7 · PostgreSQL · Flyway · Thymeleaf · OkHttp</p>
+<pre>ghcr.io/fso13/dgviz:latest
+ghcr.io/fso13/dgviz-notifications:latest
+
+# или из исходников
+docker compose up --build</pre>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap site-footer__inner">
+      <div>© DGViz · Apache License 2.0</div>
+      <div>
+        <a href="https://github.com/fso13/dgviz">Репозиторий</a>
+        ·
+        <a href="demo/">Демо</a>
+        ·
+        <a href="user/">Docs</a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
